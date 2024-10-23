@@ -9,6 +9,8 @@ import android.bluetooth.le.*
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
+import android.os.Handler
+import android.os.Looper
 
 fun Context.bluetoothAdapter(): BluetoothAdapter =
     (this.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
@@ -16,8 +18,9 @@ fun Context.bluetoothAdapter(): BluetoothAdapter =
 class MainActivity : AppCompatActivity() {
     private val bluetoothAdapter: BluetoothAdapter = bluetoothAdapter()
     private val b : BluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+    private var scanning = false
+    private val handler = Handler(Looper.getMainLooper())
     private fun scan() {
-        private val leDeviceListAdapter = LeDeviceListAdapter()
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN
             ) != PackageManager.PERMISSION_GRANTED
         ) {
@@ -36,6 +39,17 @@ class MainActivity : AppCompatActivity() {
                 // overrides goes here
             }
         }
-        b.startScan(cb)
+        if (!scanning) {
+            handler.postDelayed({
+                scanning = false
+                b.stopScan(cb)
+            }, 10000)
+            scanning = true
+            b.startScan(cb)
+        }
+        else {
+            scanning = false
+            b.stopScan(cb)
+        }
     }
 }
